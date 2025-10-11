@@ -1,6 +1,16 @@
 data "google_secret_manager_secret_version" "db_password" {
-  secret  = "projects/${var.project_id}/secrets/db-password"
-  version = "latest"
+  secret  = "db_password"
+  project = var.project_id
+}
+
+data "google_secret_manager_secret_version" "db_user" {
+  secret  = "db_user"
+  project = var.project_id
+}
+
+data "google_secret_manager_secret_version" "db_name" {
+  secret  = "db_name"
+  project = var.project_id
 }
 
 resource "google_sql_database_instance" "private_instance" {
@@ -27,12 +37,12 @@ resource "google_sql_database_instance" "private_instance" {
   depends_on = [var.vpc_connection]
 }
 
-resource "google_sql_database" "petclinic" {
+resource "google_sql_database" "sql_name" {
   name     = data.google_secret_manager_secret_version.db_name.secret_data
   instance = google_sql_database_instance.private_instance.name
 }
 
-resource "google_sql_user" "postgres_user" {
+resource "google_sql_user" "sql_user" {
   name     = data.google_secret_manager_secret_version.db_user.secret_data
   instance = google_sql_database_instance.private_instance.name
   password = data.google_secret_manager_secret_version.db_password.secret_data

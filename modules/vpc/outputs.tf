@@ -5,3 +5,6 @@ output "vpc_connection" {
 output "vpc" {
   value = google_compute_network.pz_vpc
 }
+output "snet" {
+  value = google_compute_subnetwork.main_subnet
+}

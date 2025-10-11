@@ -1,13 +1,21 @@
 
-#$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\Users\user\Downloads\kdt1-finalproject-0e8927005a17.json"
+#$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\Users\ay\Downloads\pz_project_writer.json"
 
 provider "google" {
+  credentials = file("C:/Users/ay/Downloads/pz_project_writer.json")
   project = var.project_id
   region  = var.region
 }
 
-data "google_container_cluster" "cluster" {
-  name       = module.gke.gke_cluster_name
+terraform {
+  backend "gcs" {
+    bucket = "pz-buck-888"
+    prefix = "terraform/state"
+  }
+}
+
+data "google_container_cluster" "primary" {
+  name       = "pz-gke"
   location   = var.region
   depends_on = [module.gke]
 }
@@ -17,15 +25,15 @@ data "google_client_config" "default" {
 }
 
 provider "kubernetes" {
-  host                   = "https://${data.google_container_cluster.cluster.endpoint}"
-  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
+  host                   = "https://${data.google_container_cluster.primary.endpoint}"
+  cluster_ca_certificate = base64decode(data.google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
   token                  = data.google_client_config.default.access_token
 }
 
 provider "helm" {
   kubernetes = {
-    host                   = "https://${data.google_container_cluster.cluster.endpoint}"
-    cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
+    host                   = "https://${data.google_container_cluster.primary.endpoint}"
+    cluster_ca_certificate = base64decode(data.google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
     token                  = data.google_client_config.default.access_token
   }
 }
@@ -51,9 +59,6 @@ module "rdb" {
   project_id = var.project_id
   sql_nm = "${local.name_prefix}-db"
   db_size = "db-f1-micro"
-  #db_nm = "pizza"
-  #db_user = "pg_user"
-  #db_pw = "1234"
   vpc = module.vpc.vpc
   vpc_connection = module.vpc.vpc_connection
 }
@@ -65,11 +70,8 @@ module "gke" {
   region = var.region
   vpc_connection = module.vpc.vpc_connection
   node_type = var.node_type
-}
-
-module "gcs" {
-  source = "./modules/gcs"
-  bucket_nm = "${local.name_prefix}-bucket"
+  pz_vpc = module.vpc.vpc
+  pz_snet = module.vpc.snet
 }
 
 module "workload_identity" {
@@ -88,3 +90,4 @@ module "argoCD" {
 
   depends_on = [module.gke]
 }
+

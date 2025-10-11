@@ -14,6 +14,10 @@ resource "google_container_cluster" "primary" {
     services_secondary_range_name = "gke-services-range"
   }
 
+  workload_identity_config {
+    workload_pool = "pz-project-473804.svc.id.goog"
+  }
+
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = false
