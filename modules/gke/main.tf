@@ -52,6 +52,7 @@ resource "google_container_node_pool" "primary_nodes" {
   node_count = 1
 
   node_config {
+    service_account = google_service_account.gke_node_sa_new.email
     machine_type = var.node_type
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
@@ -70,4 +71,25 @@ resource "google_container_node_pool" "primary_nodes" {
     auto_repair  = false
     auto_upgrade = true
   }
+}
+
+resource "google_service_account" "gke_node_sa_new" {
+  account_id   = "gke-node-sa-new"
+  display_name = "GKE Node Pool SA for Full Cloud Access"
+}
+
+resource "google_project_iam_member" "gke_node_roles" {
+  for_each = toset([
+    "roles/container.nodeServiceAgent", 
+    "roles/compute.viewer",
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/monitoring.viewer",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/cloudsql.client",
+    "roles/artifactregistry.reader"
+  ])
+  project = var.project_id
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.gke_node_sa_new.email}"
 }

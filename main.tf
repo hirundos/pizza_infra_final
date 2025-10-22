@@ -72,6 +72,7 @@ module "gke" {
   node_type = var.node_type
   pz_vpc = module.vpc.vpc
   pz_snet = module.vpc.snet
+  project_id = var.project_id
 }
 
 module "workload_identity" {
@@ -82,12 +83,3 @@ module "workload_identity" {
   namespace      = "default"
   roles          = "roles/storage.admin"
 }
-
-module "argoCD" {
-  source      = "./modules/argoCD"
-  name_prefix = local.name_prefix
-  argo_nm     = "${local.name_prefix}-argocd"
-
-  depends_on = [module.gke]
-}
-

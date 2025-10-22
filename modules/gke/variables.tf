@@ -14,3 +14,4 @@ variable "max_node_count" {
 
 variable "pz_vpc" {}
 variable "pz_snet" {}
+variable "project_id" {}
