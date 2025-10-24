@@ -80,6 +80,5 @@ module "workload_identity" {
   project_id     = var.project_id
   gsa_account_id = "${local.name_prefix}-gsa"
   ksa_name       = "${local.name_prefix}-ksa"
-  namespace      = "default"
   roles          = "roles/storage.admin"
 }
